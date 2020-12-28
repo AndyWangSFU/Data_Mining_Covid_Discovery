@@ -1,0 +1,116 @@
+---
+title: "KNN"
+author: "ZIHAN WANG"
+date: "19/11/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+### Install packages if not loaded
+# install.packages("FNN")
+# install.packages("vcd")
+# install.packages("mltest")
+library(FNN)
+library(vcd)
+library(mltest)
+```
+
+
+```{r}
+# Make sure the code and data are in the same path. Otherwise, set the directory
+# setwd("/users/seth/downloads/459/milestone2/")
+
+### Read the data that were separeated by Python in Q2.1
+X.train.raw = read.csv("./dataset/x_train.csv", header = T, na.strings = "NA", stringsAsFactors = F)
+X.valid.raw = read.csv("./dataset/x_test.csv", header = T, na.strings = "NA", stringsAsFactors = F)
+Y.train = read.csv("./dataset/y_train.csv", header = F, stringsAsFactors = F )
+Y.valid = read.csv("./dataset/y_test.csv", header = F, stringsAsFactors = F)
+
+```
+
+```{r}
+### Some Data Processing
+# Factorize the Y labels
+Y.train$V1 = as.factor(Y.train$V1)
+Y.valid$V1 = as.factor(Y.valid$V1)
+
+# Scale the X variables
+scale.1 <- function(x1,x2){
+  for(col in 1:ncol(x1)){
+    a <- mean(x2[,col])
+    b <- sd(x2[,col])
+    if(b!= 0){
+      x1[,col] <- (x1[,col]-a)/b
+    }else{
+      x1[,col] = 0
+    }
+  }
+  x1
+}
+
+X.train = scale.1(X.train.raw, X.train.raw)
+X.valid = scale.1(X.valid.raw, X.train.raw)
+```
+
+
+
+```{r}
+### Milestone 3: Hyperparameter tuning in KNN
+
+K.max = c(1,5,8,10,15,20,50,100) # Maximum number of neighbours
+
+### Container to store CV misclassification rates
+mis.CV = rep(0, times = 8)
+
+
+for(i in 1:8){
+  ### Progress update
+  print(paste0(i, " of ", K.max))
+  
+  ### Fit leave-one-out CV
+  this.knn = knn.cv(X.train, Y.train$V1, k=K.max[i])
+  
+  ### Get and store CV misclassification rate
+  this.mis.CV = mean(this.knn != Y.train$V1)
+  mis.CV[i] = this.mis.CV
+  print(ml_test(this.knn, Y.train$V1))
+}
+
+### Get standard errors
+SE.mis.CV = sapply(mis.CV, function(r){
+  sqrt(r*(1-r)/nrow(X.train))
+})
+```
+
+```{r}
+plot(K.max, mis.CV, xlab = "K", ylab = "Misclassification Rate")
+
+for(i in 1:8){
+  lower = mis.CV[i] - SE.mis.CV[i]
+  upper = mis.CV[i] + SE.mis.CV[i]
+  
+  lines(x = c(K.max[i], K.max[i]), y = c(lower, upper))
+}
+
+### Get CV min value for K
+k.min = which.min(mis.CV)
+
+### Add a horizontal line at min + 1SE
+thresh = mis.CV[k.min] + SE.mis.CV[k.min]
+abline(h = thresh, col = "red")
+
+### Get CV 1SE value for K
+k.1se = max(which(mis.CV <= thresh))
+
+```
+
+
+
+
+
+
+
