@@ -14,7 +14,9 @@ In this data mining project, we aim to select some most popular machine learning
 
 # Dataset Description
 The original Covid-19 dataset contains two separate files. All information was extracted and frozen on September 20, 2020. Here is a general overview of each of them. More information is available from their GitHub main pages.
+
 • Case Dataset: this contains some personal data (e.g., age) and outcomes for individual cases. (https://github.com/beoutbreakprepared/nCoV2019)
+
 • Location Dataset: this contains the number of cases and health statistics based on locations. (https://github.com/CSSEGISandData/COVID-19)
 
 # Exploratory Data Analysis
